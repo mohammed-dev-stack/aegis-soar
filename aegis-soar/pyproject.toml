@@ -1,0 +1,118 @@
+[build-system]
+requires = ["setuptools>=69.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aegis-soar"
+version = "1.0.0"
+description = "Aegis-SOAR: Multi-tenant security orchestration with database-enforced invariants"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.9.0",
+    "sqlalchemy[asyncio]>=2.0.35",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.3",
+    "argon2-cffi>=23.1.0",
+    "cryptography>=43.0.1",
+    "pyjwt>=2.9.0",
+    "pyotp>=2.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.2",
+    "mypy>=1.11.2",
+    "ruff>=0.6.9",
+    "bandit>=1.7.10",
+    "import-linter>=2.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+plugins = ["pydantic.mypy"]
+mypy_path = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["asyncpg.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "UP",
+    "SIM",
+    "TID251",
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"datetime.datetime.now".msg = "Pure modules MUST accept now_utc: int instead of reading the system clock."
+"datetime.datetime.utcnow".msg = "Pure modules MUST accept now_utc: int instead of reading the system clock."
+"time.time".msg = "Pure modules MUST accept now_utc: int instead of reading the system clock."
+"time.monotonic".msg = "Pure modules MUST accept now_utc: int instead of reading the system clock."
+
+[tool.ruff.lint.per-file-ignores]
+"!src/aegis_soar/{detection,safety_limits,ai_guard}/**" = ["TID251"]
+
+[tool.importlinter]
+root_package = "aegis_soar"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Pure Core (detection, safety_limits, ai_guard) has zero impure dependencies"
+type = "forbidden"
+source_modules = [
+    "aegis_soar.detection",
+    "aegis_soar.safety_limits",
+    "aegis_soar.ai_guard",
+]
+forbidden_modules = [
+    "aegis_soar.db",
+    "aegis_soar.api",
+    "aegis_soar.auth",
+    "aegis_soar.tenancy",
+    "aegis_soar.response",
+    "aegis_soar.adapters",
+    "aegis_soar.audit",
+    "sqlalchemy",
+    "asyncpg",
+    "fastapi",
+    "os",
+    "socket",
+    "time",
+]
+
+[[tool.importlinter.contracts]]
+name = "db layer cannot import upward into api, auth, or response"
+type = "forbidden"
+source_modules = ["aegis_soar.db"]
+forbidden_modules = [
+    "aegis_soar.api",
+    "aegis_soar.auth",
+    "aegis_soar.response",
+]
