@@ -65,6 +65,7 @@ def test_pure_modules_zero_clock_and_network_io(monkeypatch: pytest.MonkeyPatch)
     assert len(matches) == 1
     assert matches[0].mitre_technique_id == "T1110"
 
+
 def test_detection_synthetic_atomic_red_team_fixtures() -> None:
     """Verify T1110, T1059.004, and T1078 with synthetic ART fixtures."""
     events: list[SecurityEvent] = [
